@@ -1,0 +1,12 @@
+masterip="10.26.1.17"
+# 过滤IP段
+ip_segment="10.26.1"
+# ntp 用
+cluster_network="10.26.1.0/24"
+k8s_version="v1.15.0"
+root_passwd="Wioc_2017!"
+hostname="wioc-master0"
+hostip=(
+10.26.1.17
+10.26.1.10
+)

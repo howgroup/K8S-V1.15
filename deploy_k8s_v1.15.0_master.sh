@@ -145,7 +145,7 @@ echo '###########add'
 expect ssh_trust_add.exp $root_passwd $host
 fi
 echo "$host install k8s please wait!!!!!!!!!!!!!!! "
-scp base_config_v1.15.0 hwclock_ntp.sh node_install_k8s_v1.15.0.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp /etc/hosts root@$host:/etc/hosts && ssh root@$host "hostnamectl set-hostname $hostname$num" && ssh root@$host /root/hwclock_ntp.sh && ssh root@$host /root/node_install_k8s.sh
+scp -P 7030 base_config_v1.15.0 hwclock_ntp.sh node_install_k8s_v1.15.0.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp /etc/hosts root@$host:/etc/hosts && ssh root@$host "hostnamectl set-hostname $hostname$num" && ssh root@$host /root/hwclock_ntp.sh && ssh root@$host /root/node_install_k8s.sh
 
 echo "$host install k8s success!!!!!!!!!!!!!!! "
 fi

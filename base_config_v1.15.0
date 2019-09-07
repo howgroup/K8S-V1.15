@@ -1,4 +1,4 @@
-masterip="10.26.1.17"
+masterip="10.26.1.201"
 # 过滤IP段
 ip_segment="10.26.1"
 # ntp 用

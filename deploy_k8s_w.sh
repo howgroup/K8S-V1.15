@@ -166,12 +166,10 @@ EOF
 
 #安装K8S的镜像
 install_k8s_images(){
-    images=(kube-scheduler:${k8s_version}
+    images=(
             kube-proxy:${k8s_version}
-            kube-controller-manager:${k8s_version}
-            kube-apiserver:${k8s_version}
             pause:3.1
-            etcd:3.3.10)
+            )
     for imagename in ${images[@]}; do
     docker pull registry.aliyuncs.com/google_containers/$imagename
     docker tag registry.aliyuncs.com/google_containers/$imagename k8s.gcr.io/$imagename

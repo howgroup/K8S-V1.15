@@ -15,6 +15,7 @@ k8s 1.15.0一键部署地址：https://github.com/howgroup/K8S-V1.15
 
 # 部署k8s集群具体实现步骤：
 ```
+yum -y install git
 git clone https://github.com/howgroup/K8S-V1.15.git
 
 cd K8S-V1.15 && chmod -R 755 .

@@ -18,7 +18,7 @@ k8s 1.15.0一键部署地址：https://github.com/howgroup/K8S-V1.15
 git clone https://github.com/howgroup/K8S-V1.15.git
 
 cd K8S-V1.15 && chmod -R 755 .
-
+chmod +x *.sh
 编辑base_config_v1.15.0里面的参数
 
 ./deploy_k8s_v1.15.0_master.sh

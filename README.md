@@ -7,7 +7,7 @@ k8s 1.15.0一键部署地址：https://github.com/howgroup/K8S-V1.15
 ```
 1、只需要在修改k8s_config里面的固定参数即可。
 2、给.sh结尾的脚本赋权限。
-3、然后只需执行./deploy_k8s_v1.15.0_master.sh就可以啦！
+3、然后只需执行./deploy_k8s.sh就可以啦！
 4、tail -f setup.log 查看日志
 5、物理机不用说了，要是虚拟机cpu必须最少是2个哦！切记
 ```
@@ -22,7 +22,7 @@ cd K8S-V1.15 && chmod -R 755 .
 chmod +x *.sh
 编辑k8s_config里面的参数
 
-./deploy_k8s_v1.15.0_master.sh
+./deploy_k8s.sh
 
 如果原来服务器安装过，可先执行clean方法进行清理
 ./clean_k8s.sh
@@ -53,10 +53,9 @@ hostnamenode=wioc-worker0
 hostip=（
 10.26.1.17
 10.26.1.10
-10.26.1.7
 ）
 
-hostnodeip=（
+hostip_worker=（
 10.26.1.7
 ）
 ```
@@ -80,3 +79,10 @@ kube-system   kubernetes-dashboard   NodePort    10.101.25.47   <none>        44
 kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
 ```
 
+
+安装缺省主服务器
+./deploy_k8s.sh
+安装其他主节点
+./deploy_k8s_m.sh
+安装工作节点
+./deploy_k8s_w.sh

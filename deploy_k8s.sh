@@ -28,11 +28,7 @@ yum_config(){
   yum install wget -y
   yum -y install epel-release
   yum install -y tcl tclx tcl-devel expect
-  cd /etc/yum.repos.d/ && mkdir bak && mv -f *.repo bak/
-  wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
-  wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
-  yum clean all && yum makecache
-  yum -y install iotop iftop yum-utils net-tools git lrzsz expect gcc gcc-c++ make cmake libxml2-devel openssl-devel curl curl-devel unzip sudo libaio-devel wget vim ncurses-devel autoconf automake zlib-devel  python-devel bash-completion
+  yum -y install iotop iftop yum-utils net-tools git lrzsz expect gcc gcc-c++ make cmake libxml2-devel openssl-devel curl curl-devel unzip sudo libaio-devel wget vim ncurses-devel autoconf zlib-devel  python-devel bash-completion
   echo "----yum config OK!!"
 }
 
@@ -202,6 +198,10 @@ echo "----ca hash config OK!!"
 
 #install docker,安装当前指定的docker版本
 install_docker() {
+  cd /etc/yum.repos.d/ && mkdir bak && mv -f *.repo bak/
+  wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+  wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
+  yum clean all && yum makecache
 yum-config-manager --add-repo  https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
 yum install -y --setopt=obsoletes=0 docker-ce-18.09.4-3.el7
 systemctl start docker

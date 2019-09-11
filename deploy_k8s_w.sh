@@ -1,23 +1,19 @@
 #!/bin/bash
 #howgroup@qq.com
-#get or refer from github, modify with own use and biz requirement
-
-source ./base_config_v1.15.0
+source ./k8s_config
 bash_path=$(cd "$(dirname "$0")";pwd)
 
-
-if [[ "$(whoami)" != "root" ]]; then  #check with user, it must be root
-    echo "please run this script as root ." >&2
-    exit 1
+if [[ "$(whoami)" != "root" ]]; then
+	echo "please run this script as root ." >&2
+	exit 1
 fi
 
-log="./setup_env.log"  #log file path,操作日志存放路径
-fsize=2000000
-exec 2>>$log  #save all logs to setup log file,如果执行过程中有错误信息均输出到日志文件中
+log="./setup.log"  #操作日志存放路径 
+fsize=2000000         
+exec 2>>$log  #如果执行过程中有错误信息均输出到日志文件中
 
-echo -e "\033[31m 这个是Kubernetes集群一键部署脚本,当前部署版本为V1.15.0！Please continue to enter after 5S or ctrl+C to cancel \033[0m"
-sleep 5
-
+echo -e "\033[31m 这个是centos7系统初始化脚本，请慎重运行！Please continue to enter or ctrl+C to cancel \033[0m"
+#sleep 5
 #yum update,更新yum已经安装的软件
 yum_update(){
   yum update -y
@@ -31,8 +27,7 @@ yum_config(){
   wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
   yum clean all && yum makecache
   yum -y install epel-release
-  yum -y install iotop iftop yum-utils net-tools git lrzsz expect gcc gcc-c++ make cmake libxml2-devel openssl-devel curl curl-devel unzip sudo ntp libaio-devel wget vim ncurses-devel autoconf automake zlib-devel  python-devel bash-completion
-#  ntpdate 0.asia.pool.ntp.org
+  yum -y install iotop iftop yum-utils net-tools git lrzsz expect gcc gcc-c++ make cmake libxml2-devel openssl-devel curl curl-devel unzip sudo libaio-devel wget vim ncurses-devel autoconf automake zlib-devel  python-devel bash-completion
   echo "----yum config OK!!"
 }
 
@@ -45,13 +40,13 @@ iptables_config(){
 }
 
 #system config,配置系统的安全策略,禁用selinux,并且设置时钟同步服务,主时区为亚洲上海
-system_config(){
+sec_ntp_config(){
   sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
   setenforce 0
   timedatectl set-local-rtc 1 && timedatectl set-timezone Asia/Shanghai
   yum -y install chrony && systemctl start chronyd.service && systemctl enable chronyd.service
   systemctl restart chronyd.service
-  echo "----system config OK!!"
+  echo "----security ntp config OK!!"
 }
 
 #ulimit,修改内核参数,取消文件数量的限制
@@ -125,53 +120,20 @@ change_hosts(){
     num=0
     #rm -rf ./new_hostname_list.config
     #touch ./new_hostname_list.config
-    for host in ${hostip[@]}
+    for host in ${hostip_worker[@]}
     do
     let num+=1
     if [ $host == `get_localip` ];then
-    `hostnamectl set-hostname $hostname$num`
+    `hostnamectl set-hostname $hostname_worker$num`
     echo $host `hostname` >> /etc/hosts
     #echo `hostname` >> ./new_hostname_list.config
     else
-    echo $host $hostname$num >> /etc/hosts
+    echo $host $hostname_worker$num >> /etc/hosts
 
-    #echo $hostname$num >> ./new_hostname_list.config
+    #echo $hostname_worker$num >> ./new_hostname_list.config
     fi
     done
     echo "----change hosts config OK!!"
-}
-
-#管理员的SSH信任配置,在没有rsa配置时,采用初始化exp外部文件,否则添加ssh用户
-rootssh_trust(){
-cd $bash_path
-num=0
-for host in ${hostip[@]}
-do
-let num+=1
-if [[ `get_localip` != $host ]];then
-
-if [[ ! -f /root/.ssh/id_rsa.pub ]];then
-echo '###########init'
-expect ssh_trust_init.exp $root_passwd $host
-else
-echo '###########add'
-expect ssh_trust_add.exp $root_passwd $host
-fi
-echo "$host install k8s please wait!!!!!!!!!!!!!!! "
-scp -P 7030 base_config_v1.15.0 hwclock_ntp.sh node_install_k8s_v1.15.0.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp /etc/hosts root@$host:/etc/hosts && ssh root@$host "hostnamectl set-hostname $hostname$num" && ssh root@$host /root/hwclock_ntp.sh && ssh root@$host /root/node_install_k8s.sh
-
-echo "$host install k8s success!!!!!!!!!!!!!!! "
-fi
-done
-
-echo "----rootssh config OK!!"
-}
-
-#生成本地ca的hash值,用于多个服务器之间的信任
-ca_hash(){
-hash_value=$(openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //')
-echo $hash_value
-echo "----ca hash config OK!!"
 }
 
 #install docker,安装当前指定的docker版本
@@ -184,7 +146,7 @@ echo "----install docker OK!!"
 }
 
 #安装kubenetes的相关包
-set_repo(){
+set_k8s_repo(){
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
@@ -199,7 +161,7 @@ EOF
     systemctl daemon-reload
     systemctl enable kubelet
     systemctl start kubelet
-    echo "----set repo config OK!!"
+    echo "----set k8s_repo config OK!!"
 }
 
 #安装K8S的镜像
@@ -227,9 +189,9 @@ install_k8s_images(){
 token_shar_value(){
 cd $bash_path
 /usr/bin/kubeadm token list > token_shar_value.text
-echo tocken=$(sed -n "2, 1p" token_shar_value.text | awk '{print $1}') >> base_config_v1.15.0
+echo token_value=$(sed -n "2, 1p" token_shar_value.text | awk '{print $1}') >> k8s_config
 openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //' > token_shar_value.text
-echo "sha_value=$(cat token_shar_value.text)"  >> base_config_v1.15.0
+echo "sha_value=$(cat token_shar_value.text)"  >> k8s_config
 rm -rf ./token_shar_value.text
 echo "----token shar value OK!!"
 }
@@ -241,23 +203,30 @@ install_flannel(){
     echo "----install flannel OK!!"
 }
 
-#主程序入口
+#加入集群
+join_cluster(){
+  kubeadm join $masterip:6443 --token $token_value --discovery-token-ca-cert-hash sha256:$sha_value
+}
+
+
+
 main(){
  #yum_update
-  #setupkernel
-  #yum_config
-  ssh_config
-  iptables_config
-  system_config
-  ulimit_config
-  sysctl_config
-  change_hosts
-  swapoff
-  install_docker
-  set_repo
-  install_k8s_images
-  install_flannel
-  token_shar_value
-  rootssh_trust
+ #setupkernel
+ yum_config
+ ssh_config
+ iptables_config
+ sec_ntp_config
+ #ulimit_config
+ sysctl_config
+# change_hosts
+ swapoff
+ install_docker
+ set_k8s_repo
+ 
+ install_k8s_images
+ install_flannel
+ 
+ join_cluster
 }
-main > ./setup_env.log 2>&1
+main > ./setup.log 2>&1

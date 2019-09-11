@@ -9,8 +9,13 @@ hostname="wioc-master0"
 hostip=(
 10.26.1.17
 10.26.1.10
+10.26.1.7
 )
-token="9jdjjk.pxuaw8ybyq6xrnev"
+hostname_worker="wioc-worker0"
+hostip_worker=(
+10.26.1.7
+)
+token_value="9jdjjk.pxuaw8ybyq6xrnev"
 sha_value="5b3f23b986b1279258a908e3bdebe31186ebf5f58cb23baa8cde95414cefb674"
 
 

@@ -1,5 +1,7 @@
 #!/bin/bash
 #howgroup@qq.com
+    rm -rf /root/.kube
+    kubeadm reset -f
 
     systemctl stop kubelet
     docker rm -f -v $(docker ps  -a -q)

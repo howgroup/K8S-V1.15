@@ -5,7 +5,7 @@ k8s 1.15.0一键部署地址：https://github.com/howgroup/K8S-V1.15
 
 注意事项：
 ```
-1、只需要在修改base_config_v1.15.0里面的固定参数即可。
+1、只需要在修改k8s_config里面的固定参数即可。
 2、给.sh结尾的脚本赋权限。
 3、然后只需执行./deploy_k8s_v1.15.0_master.sh就可以啦！
 4、tail -f setup.log 查看日志
@@ -19,7 +19,7 @@ git clone https://github.com/howgroup/K8S-V1.15.git
 
 cd K8S-V1.15 && chmod -R 755 .
 chmod +x *.sh
-编辑base_config_v1.15.0里面的参数
+编辑k8s_config里面的参数
 
 ./deploy_k8s_v1.15.0_master.sh
 
@@ -28,7 +28,7 @@ chmod +x *.sh
 
 ```
 
-# base_config_v1.15.0参数介绍：
+# k8s_config参数介绍：
 ```
 masterIP：
 masterip="10.26.1.17"

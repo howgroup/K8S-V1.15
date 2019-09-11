@@ -184,7 +184,7 @@ echo "----install docker OK!!"
 }
 
 #安装kubenetes的相关包
-set_repo(){
+set_k8s_repo(){
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
@@ -199,7 +199,7 @@ EOF
     systemctl daemon-reload
     systemctl enable kubelet
     systemctl start kubelet
-    echo "----set repo config OK!!"
+    echo "----set k8s_repo config OK!!"
 }
 
 #安装K8S的镜像
@@ -254,7 +254,7 @@ main(){
   change_hosts
   swapoff
   install_docker
-  set_repo
+  set_k8s_repo
   install_k8s_images
   install_flannel
   token_shar_value

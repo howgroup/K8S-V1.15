@@ -26,11 +26,12 @@ yum_update(){
 #configure yum source,配置yum的仓库路径，选择阿里云，将原有文件备份到bak目录下
 yum_config(){
   yum install wget -y
+  yum -y install epel-release
+  yum install -y tcl tclx tcl-devel expect
   cd /etc/yum.repos.d/ && mkdir bak && mv -f *.repo bak/
   wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
   wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
   yum clean all && yum makecache
-  yum -y install epel-release
   yum -y install iotop iftop yum-utils net-tools git lrzsz expect gcc gcc-c++ make cmake libxml2-devel openssl-devel curl curl-devel unzip sudo libaio-devel wget vim ncurses-devel autoconf automake zlib-devel  python-devel bash-completion
   echo "----yum config OK!!"
 }
@@ -287,7 +288,7 @@ init_k8s(){
 main(){
  #yum_update
   #setupkernel
-  #yum_config
+  yum_config
   ssh_config
   iptables_config
   sec_ntp_config

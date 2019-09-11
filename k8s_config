@@ -9,7 +9,6 @@ hostname="wioc-master0"
 hostip=(
 10.26.1.17
 10.26.1.10
-10.26.1.7
 )
 hostname_worker="wioc-worker0"
 hostip_worker=(

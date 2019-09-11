@@ -17,10 +17,6 @@ echo -e "\033[31m 这个是centos7系统初始化脚本，请慎重运行！Plea
 
 #安装kubenetes的相关包
 set_k8s_repo(){
-  cd /etc/yum.repos.d/ && mkdir bak && mv -f *.repo bak/
-  wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
-  wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
-  yum clean all && yum makecache
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes

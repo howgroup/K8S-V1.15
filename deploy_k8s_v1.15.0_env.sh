@@ -45,13 +45,13 @@ iptables_config(){
 }
 
 #system config,配置系统的安全策略,禁用selinux,并且设置时钟同步服务,主时区为亚洲上海
-system_config(){
+sec_ntp_config(){
   sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
   setenforce 0
   timedatectl set-local-rtc 1 && timedatectl set-timezone Asia/Shanghai
   yum -y install chrony && systemctl start chronyd.service && systemctl enable chronyd.service
   systemctl restart chronyd.service
-  echo "----system config OK!!"
+  echo "----security ntp config OK!!"
 }
 
 #ulimit,修改内核参数,取消文件数量的限制
@@ -248,7 +248,7 @@ main(){
   #yum_config
   ssh_config
   iptables_config
-  system_config
+  #sec_ntp_config
   ulimit_config
   sysctl_config
   change_hosts

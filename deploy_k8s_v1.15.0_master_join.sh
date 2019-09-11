@@ -28,7 +28,7 @@ init_k8s_master_join(){
     #kubeadm init --kubernetes-version=$k8s_version --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=$masterip
 
     kubeadm join $masterip:6443 --token $token \
-    --discovery-token-ca-cert-hash sha256:$sha_text \
+    --discovery-token-ca-cert-hash sha256:$sha_value \
 
     mkdir -p /root/.kube
     cp /etc/kubernetes/admin.conf /root/.kube/config

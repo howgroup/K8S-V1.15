@@ -2,7 +2,7 @@
 #b8_yang@163.com
 #source ./k8s_config
 bash_path=$(cd "$(dirname "$0")";pwd)
-source $bash_path/base.config
+source $bash_path/k8s_config
 
 if [[ "$(whoami)" != "root" ]]; then
 	echo "please run this script as root ." >&2

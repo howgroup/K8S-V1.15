@@ -342,7 +342,7 @@ echo "----rootssh worker config OK!!"
 check_cluster(){
 kubectl get node
 kubectl cluster-info
-
+kubectl cluster-info dump
 }
 
 
@@ -366,8 +366,8 @@ main(){
   install_flannel
   token_shar_value
 
-  rootssh_trust_master
-  rootssh_trust_worker
+  #rootssh_trust_master
+  #rootssh_trust_worker
   check_cluster
 echo "k8s_$k8s_version 集群已经安装完毕，请登录相关服务器验收!"
 }

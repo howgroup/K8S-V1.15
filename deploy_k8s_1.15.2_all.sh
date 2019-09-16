@@ -11,7 +11,7 @@ if [[ "$(whoami)" != "root" ]]; then  #check with user, it must be root
     exit 1
 fi
 
-log="./setup_env.log"  #log file path,操作日志存放路径
+log="./setup.log"  #log file path,操作日志存放路径
 fsize=2000000
 exec 2>>$log  #save all logs to setup log file,如果执行过程中有错误信息均输出到日志文件中
 
@@ -27,6 +27,7 @@ yum_update(){
 yum_config(){
   yum install wget epel-release -y
   yum install -y tcl tclx tcl-devel expect
+
   if [[ $aliyun == "1" ]];then
   test -d /etc/yum.repos.d/bak/ || yum install wget epel-release -y && cd /etc/yum.repos.d/ && mkdir bak && mv -f *.repo bak/ && wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo && wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo && yum clean all && yum makecache
   fi
@@ -134,6 +135,31 @@ echo "$ipaddr"
 }
 
 
+#根据配置文件,修改服务器名称,在同一个队列内的序号自动增加
+change_hosts(){
+cd $bash_path
+num=0
+for host in ${hostip[@]}
+do
+grep "$host" /etc/hosts
+if [[ $? -eq 0 ]];then
+
+echo "hosts修改完毕!!!"
+else
+let num+=1
+
+if [[ $host == `get_localip` ]];then
+`hostnamectl set-hostname $hostname$num`
+grep "$host" /etc/hosts || echo $host `hostname` >> /etc/hosts
+else
+grep "$host" /etc/hosts || echo $host $hostname$num >> /etc/hosts
+fi
+
+fi
+done
+
+}
+
 #install docker,安装当前指定的docker版本
 install_docker() {
 test -d /etc/docker
@@ -212,6 +238,114 @@ install_k8s_images(){
 }
 
 
+# config docker
+config_docker(){
+grep "tcp://0.0.0.0:2375" /usr/lib/systemd/system/docker.service
+if [[ $? -eq 0 ]];then
+echo "docker API接口已经配置完毕"
+else
+sed -i "/^ExecStart/cExecStart=\/usr\/bin\/dockerd -H tcp:\/\/0\.0\.0\.0:2375 -H unix:\/\/\/var\/run\/docker.sock" /usr/lib/systemd/system/docker.service
+systemctl daemon-reload
+systemctl restart docker.service
+echo "docker API接口已经配置完毕"
+fi
+}
+
+
+#初始化K8S
+init_k8s(){
+	set -e
+	rm -rf /root/.kube
+    rm -rf /var/lib/etcd/*
+	kubeadm reset -f
+	kubeadm init --kubernetes-version=$k8s_version --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=$masterip
+
+	mkdir -p /root/.kube
+	cp /etc/kubernetes/admin.conf /root/.kube/config
+	chown $(id -u):$(id -g) /root/.kube/config
+	cp -p /root/.bash_profile /root/.bash_profile.bak$(date '+%Y%m%d%H%M%S')
+	echo "export KUBECONFIG=/root/.kube/config" >> /root/.bash_profile
+	source /root/.bash_profile
+}
+
+#安装flannel网络
+install_flannel(){
+    cd $bash_path
+    kubectl apply -f kube-flannel.yml
+    echo "flannel 网络配置完毕"
+}
+
+token_shar_value(){
+
+    cd $bash_path
+    /usr/bin/kubeadm token list > $bash_path/token_shar_value.text
+    sed -i "s/token_value=/token_value=$(sed -n "2, 1p" token_shar_value.text | awk '{print $1}')/g" $bash_path/k8s_config
+    sed -i "s/sha_value=/sha_value=$(openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //')/g" $bash_path/k8s_config
+
+    rm -rf $bash_path/token_shar_value.text
+    echo "token_value 设置完毕"
+}
+
+#管理员的SSH信任配置,在没有rsa配置时,采用初始化exp外部文件,否则添加ssh用户
+rootssh_trust_master(){
+cd $bash_path
+num=0
+for host in ${hostip[@]}
+do
+let num+=1
+if [[ `get_localip` != $host ]];then
+
+    if [[ ! -f /root/.ssh/id_rsa.pub ]];then
+    echo '###########init'
+    expect ssh_trust_init.exp $root_passwd $host
+    else
+    echo '###########add'
+    expect ssh_trust_add.exp $root_passwd $host
+    fi
+    echo "$host install k8s master please wait!!!!!!!!!!!!!!! "
+    scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_m.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/deploy_k8s_m.sh
+
+    echo "$host install k8s master success!!!!!!!!!!!!!!! "
+fi
+done
+
+echo "----rootssh master config OK!!"
+}
+
+#管理员的SSH信任配置,在没有rsa配置时,采用初始化exp外部文件,否则添加ssh用户
+rootssh_trust_worker(){
+cd $bash_path
+num=0
+for host in ${hostip_worker[@]}
+do
+let num+=1
+if [[ `get_localip` != $host ]];then
+
+if [[ ! -f /root/.ssh/id_rsa.pub ]];then
+echo '###########init'
+expect ssh_trust_init.exp $root_passwd $host
+else
+echo '###########add'
+expect ssh_trust_add.exp $root_passwd $host
+fi
+echo "$host install k8s worker please wait!!!!!!!!!!!!!!! "
+scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_w.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname_worker$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/deploy_k8s_w.sh
+
+echo "$host install k8s worker success!!!!!!!!!!!!!!! "
+fi
+done
+
+echo "----rootssh worker config OK!!"
+}
+
+
+check_cluster(){
+kubectl get node
+kubectl cluster-info
+kubectl cluster-info dump
+}
+
+
 main(){
  #yum_update
   yum_config
@@ -220,11 +354,21 @@ main(){
   iptables_config
   system_config
   ulimit_config
+  change_hosts
   swapoff
   install_docker
+  #config_docker
   set_k8s_repo
 
   install_k8s_images
-  echo "k8s_$k8s_version 集群基础环境已经安装完毕，请后续初始化管理节点或工作节点!"
+  init_k8s
+
+  install_flannel
+  token_shar_value
+
+  #rootssh_trust_master
+  #rootssh_trust_worker
+  check_cluster
+echo "k8s_$k8s_version 集群已经安装完毕，请登录相关服务器验收!"
 }
-main > ./setup_env.log 2>&1
+main > ./setup.log 2>&1

@@ -56,3 +56,12 @@ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | gre
 ./deploy_k8s_m.sh
 安装工作节点
 ./deploy_k8s_w.sh
+
+
+kubectl get node --all-namespaces
+kubectl get pods -n kube-system
+kubectl get pods --all-namespaces
+kubectl describe node calico-node-jq2dh -n kube-system
+kubectl describe node calico-node-hgrdj -n kube-system
+kubectl describe pod calico-node-hgrdj -n kube-system
+kubectl -n kube-system logs -f calico-node-hgrdj

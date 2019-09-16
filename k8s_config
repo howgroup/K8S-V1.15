@@ -1,4 +1,4 @@
-# 1 更换 yum源为ali源，2 不更换yum源
+# 1 更换 yum源为ali源，0 不更换yum源
 aliyun="1"
 
 masterip="10.26.1.201"
@@ -11,14 +11,14 @@ root_passwd="Wioc_2017!"
 hostname="wioc-master0"
 hostip=(
 10.26.1.17
-10.26.1.10
 )
 hostname_worker="wioc-worker0"
 hostip_worker=(
+10.26.1.10
 10.26.1.7
 )
 #不用填写，不要动！
-tocken=
+token_value=
 sha_value=
 
 

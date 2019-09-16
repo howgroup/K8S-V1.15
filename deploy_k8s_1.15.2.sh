@@ -1,31 +1,37 @@
 #!/bin/bash
-#b8_yang@163.com
-#source ./k8s_config
+#howgroup@qq.com
+#get or refer from github, modify with own use and biz requirement
+
 bash_path=$(cd "$(dirname "$0")";pwd)
 source $bash_path/k8s_config
 
-if [[ "$(whoami)" != "root" ]]; then
-	echo "please run this script as root ." >&2
-	exit 1
+
+if [[ "$(whoami)" != "root" ]]; then  #check with user, it must be root
+    echo "please run this script as root ." >&2
+    exit 1
 fi
 
-log="./setup.log"  #操作日志存放路径
+log="./setup.log"  #log file path,操作日志存放路径
 fsize=2000000
-exec 2>>$log  #如果执行过程中有错误信息均输出到日志文件中
+exec 2>>$log  #save all logs to setup log file,如果执行过程中有错误信息均输出到日志文件中
 
 echo -e "\033[31m 这个是Kubernetes集群一键部署脚本,当前部署版本为V1.15.2！Please continue to enter after 5S or ctrl+C to cancel \033[0m"
 sleep 5
 
-#yum update
+#yum update,更新yum已经安装的软件
 yum_update(){
 	yum update -y
 }
-#configure yum source
+
+#configure yum source,配置yum的仓库路径，选择阿里云，将原有文件备份到bak目录下
 yum_config(){
   yum install wget epel-release -y
+  yum install -y tcl tclx tcl-devel expect
+
   if [[ $aliyun == "1" ]];then
   test -d /etc/yum.repos.d/bak/ || yum install wget epel-release -y && cd /etc/yum.repos.d/ && mkdir bak && mv -f *.repo bak/ && wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo && wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo && yum clean all && yum makecache
   fi
+    echo "----yum config OK!!"
 }
 
 yum_init(){
@@ -46,16 +52,16 @@ fi
 done
 }
 
-#firewalld
+#firewalld,配置防火墙，关闭，禁用
 iptables_config(){
 if [[ `ps -ef | grep firewalld |wc -l` -gt 1 ]];then
   systemctl stop firewalld.service
   systemctl disable firewalld.service
-  echo "防火墙我关了奥!!!"
+  echo "----iptables config OK!!"
 fi
-#  iptables -P FORWARD ACCEPT
 }
-#system config
+
+#system config,配置系统的安全策略,禁用selinux,并且设置时钟同步服务,主时区为亚洲上海
 system_config(){
 grep "SELINUX=disabled" /etc/selinux/config
 if [[ $? -eq 0 ]];then
@@ -74,7 +80,7 @@ if [[ `ps -ef | grep chrony |wc -l` -eq 1 ]];then
 fi
 }
 
-
+#ulimit,修改内核参数,取消文件数量的限制
 ulimit_config(){
 grep 'ulimit' /etc/rc.local
 if [[ $? -eq 0 ]];then
@@ -97,6 +103,7 @@ echo "内核参数调整完毕!!!"
 fi
 }
 
+#配置ssh安全策略,通过配置文件中的参数,设置ssh的访问
 ssh_config(){
 grep 'UserKnownHostsFile' /etc/ssh/ssh_config
 if [[ $? -eq 0 ]];then
@@ -107,14 +114,28 @@ echo "ssh参数配置完毕!!!"
 fi
 }
 
+#set sysctl,配置K8S的系统管理
+sysctl_config(){
+  cp /etc/sysctl.conf /etc/sysctl.conf.bak
+  cat > /etc/sysctl.conf << EOF
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_nonlocal_bind = 1
+net.ipv4.ip_forward = 1
+vm.swappiness=0
+EOF
+  /sbin/sysctl -p
+  echo "----sysctl config OK!!"
+}
 
-
+#获取当前IP地址
 get_localip(){
 ipaddr=$(ip addr | awk '/^[0-9]+: / {}; /inet.*global/ {print gensub(/(.*)\/(.*)/, "\\1", "g", $2)}' | grep $ip_segment)
 echo "$ipaddr"
 }
 
 
+#根据配置文件,修改服务器名称,在同一个队列内的序号自动增加
 change_hosts(){
 cd $bash_path
 num=0
@@ -139,7 +160,7 @@ done
 
 }
 
-#install docker
+#install docker,安装当前指定的docker版本
 install_docker() {
 test -d /etc/docker
 if [[ $? -eq 0 ]];then
@@ -160,7 +181,7 @@ echo "docker已经安装完毕!!!"
 fi
 }
 
-#swapoff
+#swapoff,关闭swap交换分区
 swapoff(){
 grep 'vm.swappiness=0' /etc/sysctl.conf
 if [[ $? -eq 0 ]];then
@@ -170,10 +191,11 @@ else
   sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
   echo "vm.swappiness=0" >> /etc/sysctl.conf
   /sbin/sysctl -p
+    echo "----swapoff config OK!!"
 fi
 }
 
-
+#安装kubenetes的相关包
 set_k8s_repo(){
 test -f /etc/yum.repos.d/kubernetes.repo
 if [[ $? -eq 0 ]];then
@@ -193,6 +215,7 @@ EOF
 	systemctl daemon-reload
 	systemctl enable kubelet
 	systemctl start kubelet
+	echo "----set k8s_repo config OK!!"
 fi
 }
 
@@ -229,12 +252,14 @@ fi
 }
 
 
+#初始化K8S
 init_k8s(){
 	set -e
 	rm -rf /root/.kube
     rm -rf /var/lib/etcd/*
 	kubeadm reset -f
 	kubeadm init --kubernetes-version=$k8s_version --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=$masterip
+
 	mkdir -p /root/.kube
 	cp /etc/kubernetes/admin.conf /root/.kube/config
 	chown $(id -u):$(id -g) /root/.kube/config
@@ -243,6 +268,7 @@ init_k8s(){
 	source /root/.bash_profile
 }
 
+#安装flannel网络
 install_flannel(){
     cd $bash_path
     kubectl apply -f kube-flannel.yml
@@ -260,11 +286,37 @@ token_shar_value(){
     echo "token_value 设置完毕"
 }
 
-
-rootssh_trust(){
+#管理员的SSH信任配置,在没有rsa配置时,采用初始化exp外部文件,否则添加ssh用户
+rootssh_trust_master(){
 cd $bash_path
 num=0
 for host in ${hostip[@]}
+do
+let num+=1
+if [[ `get_localip` != $host ]];then
+
+    if [[ ! -f /root/.ssh/id_rsa.pub ]];then
+    echo '###########init'
+    expect ssh_trust_init.exp $root_passwd $host
+    else
+    echo '###########add'
+    expect ssh_trust_add.exp $root_passwd $host
+    fi
+    echo "$host install k8s master please wait!!!!!!!!!!!!!!! "
+    scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_m.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/deploy_k8s_m.sh
+
+    echo "$host install k8s master success!!!!!!!!!!!!!!! "
+fi
+done
+
+echo "----rootssh master config OK!!"
+}
+
+#管理员的SSH信任配置,在没有rsa配置时,采用初始化exp外部文件,否则添加ssh用户
+rootssh_trust_worker(){
+cd $bash_path
+num=0
+for host in ${hostip_worker[@]}
 do
 let num+=1
 if [[ `get_localip` != $host ]];then
@@ -276,11 +328,16 @@ else
 echo '###########add'
 expect ssh_trust_add.exp $root_passwd $host
 fi
-scp -P 7030 k8s_config hwclock_ntp.sh node_install_k8s.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh root@$host "hostnamectl set-hostname $hostname$num" && ssh root@$host /root/hwclock_ntp.sh && ssh root@$host /root/node_install_k8s.sh && ssh root@$host "rm -rf k8s_config node_install_k8s.sh ssh_trust_init.exp ssh_trust_add.exp hwclock_ntp.sh"
+echo "$host install k8s worker please wait!!!!!!!!!!!!!!! "
+scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_w.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname_worker$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/deploy_k8s_w.sh
+
+echo "$host install k8s worker success!!!!!!!!!!!!!!! "
 fi
-echo $host"服务器安装完毕!!! "
 done
+
+echo "----rootssh worker config OK!!"
 }
+
 
 check_cluster(){
 kubectl get node
@@ -309,7 +366,8 @@ main(){
   install_flannel
   token_shar_value
 
-  rootssh_trust
+  rootssh_trust_master
+  rootssh_trust_worker
   check_cluster
 echo "k8s_$k8s_version 集群已经安装完毕，请登录相关服务器验收!"
 }

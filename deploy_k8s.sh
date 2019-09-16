@@ -90,15 +90,6 @@ EOF
   echo "----sysctl config OK!!"
 }
 
-#swapoff,关闭swap交换分区
-swapoff(){
-  /sbin/swapoff -a
-  sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
-  echo "vm.swappiness=0" >> /etc/sysctl.conf
-  /sbin/sysctl -p
-  echo "----swapoff config OK!!"
-}
-
 #获取当前IP地址
 get_localip(){
 ipaddr='172.0.0.1'
@@ -154,7 +145,7 @@ echo '###########add'
 expect ssh_trust_add.exp $root_passwd $host
 fi
 echo "$host install k8s master please wait!!!!!!!!!!!!!!! "
-scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_m.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh root@$host /root/deploy_k8s_m.sh
+scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_m.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/deploy_k8s_m.sh
 
 echo "$host install k8s master success!!!!!!!!!!!!!!! "
 fi
@@ -180,7 +171,7 @@ echo '###########add'
 expect ssh_trust_add.exp $root_passwd $host
 fi
 echo "$host install k8s worker please wait!!!!!!!!!!!!!!! "
-scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_w.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname_worker$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh root@$host /root/deploy_k8s_w.sh
+scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_w.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname_worker$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/deploy_k8s_w.sh
 
 echo "$host install k8s worker success!!!!!!!!!!!!!!! "
 fi
@@ -207,6 +198,15 @@ yum install -y --setopt=obsoletes=0 docker-ce-18.09.4-3.el7
 systemctl start docker
 systemctl enable docker
 echo "----install docker OK!!"
+}
+
+#swapoff,关闭swap交换分区
+swapoff(){
+  /sbin/swapoff -a
+  sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+  echo "vm.swappiness=0" >> /etc/sysctl.conf
+  /sbin/sysctl -p
+  echo "----swapoff config OK!!"
 }
 
 #安装kubenetes的相关包
@@ -249,16 +249,7 @@ install_k8s_images(){
     echo "----install k8s images config OK!!"
 }
 
-#基于shar算法,生成token
-token_shar_value(){
-cd $bash_path
-/usr/bin/kubeadm token list > token_shar_value.text
-echo token_value=$(sed -n "2, 1p" token_shar_value.text | awk '{print $1}') >> k8s_config
-openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //' > token_shar_value.text
-echo "sha_value=$(cat token_shar_value.text)"  >> k8s_config
-rm -rf ./token_shar_value.text
-echo "----token shar value OK!!"
-}
+
 
 #安装flannel网络
 install_flannel(){
@@ -283,7 +274,16 @@ init_k8s(){
     source /root/.bash_profile
 }
 
-
+#基于shar算法,生成token
+token_shar_value(){
+cd $bash_path
+/usr/bin/kubeadm token list > token_shar_value.text
+echo token_value=$(sed -n "2, 1p" token_shar_value.text | awk '{print $1}') >> k8s_config
+openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //' > token_shar_value.text
+echo "sha_value=$(cat token_shar_value.text)"  >> k8s_config
+rm -rf ./token_shar_value.text
+echo "----token shar value OK!!"
+}
 #主程序入口
 main(){
  #yum_update

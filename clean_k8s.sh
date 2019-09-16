@@ -1,6 +1,7 @@
 #!/bin/bash
 #howgroup@qq.com
     rm -rf /root/.kube
+    rm -rf /etc/yum.repos.d/kubernetes.repo
     kubeadm reset -f
 
     systemctl stop kubelet

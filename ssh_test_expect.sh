@@ -18,6 +18,11 @@ exec 2>>$log  #save all logs to setup log file,如果执行过程中有错误信
 echo -e "\033[31m 这个是Kubernetes集群一键部署脚本,当前部署版本为V1.15.2！Please continue to enter after 5S or ctrl+C to cancel \033[0m"
 sleep 5
 
+#获取当前IP地址
+get_localip(){
+ipaddr=$(ip addr | awk '/^[0-9]+: / {}; /inet.*global/ {print gensub(/(.*)\/(.*)/, "\\1", "g", $2)}' | grep $ip_segment)
+echo "$ipaddr"
+}
 
 #管理员的SSH信任配置,在没有rsa配置时,采用初始化exp外部文件,否则添加ssh用户
 rootssh_trust_master(){

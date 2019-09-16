@@ -84,7 +84,7 @@ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | gre
 
 
 kubectl get node --all-namespaces
-kubectl get pods -n kube-system
+kubectl get pods -n kube-system -o wide
 kubectl get pods --all-namespaces
 kubectl describe node calico-node-jq2dh -n kube-system
 kubectl describe node calico-node-hgrdj -n kube-system

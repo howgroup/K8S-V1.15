@@ -32,14 +32,8 @@ chmod +x *.sh
 
 2、主节点管理节点安装
 ```
-从主节点上，下载k8s_config文件
-将如下文件下载到本机 /www/kube-cluster/k8s
-k8s_config
-setclock_ntp.sh
-deploy_k8s_m.sh
 
-设置脚本可执行
-chmod +x *.sh
+同工作节点
 
 运行如下命令：
 设置时钟同步：./setclock_ntp.sh
@@ -48,11 +42,15 @@ chmod +x *.sh
 
 3、工作节点安装
 ```
-从主节点上，下载k8s_config文件
-将如下文件下载到本机 /www/kube-cluster/k8s
-k8s_config
-setclock_ntp.sh
-deploy_k8s_w.sh
+创建目录
+mkdir /www/kube-cluster/kubeadm
+git clone https://github.com/howgroup/K8S-V1.15.git
+
+从主节点上，/www/kube-cluster/kubeadm/K8S-V1.15/k8s_config
+覆盖K8S-V1.15下的文件
+
+从主节点上，/etc/kubeletes下载admin.conf文件
+将文件下载到本机 /www/kube-cluster/kubeadm/K8S-V1.15/admin.conf
 
 设置脚本可执行
 chmod +x *.sh
@@ -60,6 +58,7 @@ chmod +x *.sh
 运行如下命令：
 设置时钟同步：./setclock_ntp.sh
 安装节点，以管理节点方式加入集群: ./deploy_k8s_w.sh
+
 ```
 
 三、安装控制台
@@ -82,14 +81,6 @@ kube-system   kubernetes-dashboard   NodePort    10.101.25.47   <none>        44
 ```
 kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
 ```
-
-
-安装缺省主服务器
-./deploy_k8s.sh
-安装其他主节点
-./deploy_k8s_m.sh
-安装工作节点
-./deploy_k8s_w.sh
 
 
 kubectl get node --all-namespaces

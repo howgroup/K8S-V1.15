@@ -12,7 +12,7 @@ log="./setup.log"  #操作日志存放路径
 fsize=2000000
 exec 2>>$log  #如果执行过程中有错误信息均输出到日志文件中
 
-echo -e "\033[31m 这个是centos7系统初始化脚本，请慎重运行！Please continue to enter or ctrl+C to cancel \033[0m"
+echo -e "\033[31m 这个是centos7系统初始化脚本，请慎重运行!Please continue to enter or ctrl+C to cancel \033[0m"
 #sleep 5
 
 #安装kubenetes的相关包

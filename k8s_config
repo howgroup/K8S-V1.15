@@ -1,9 +1,12 @@
+# 1 更换 yum源为ali源，2 不更换yum源
+aliyun="1"
+
 masterip="10.26.1.201"
 # 过滤IP段
 ip_segment="10.26.1"
 # ntp 用
 cluster_network="10.26.1.0/24"
-k8s_version="v1.15.0"
+k8s_version="v1.15.2"
 root_passwd="Wioc_2017!"
 hostname="wioc-master0"
 hostip=(
@@ -14,8 +17,8 @@ hostname_worker="wioc-worker0"
 hostip_worker=(
 10.26.1.7
 )
-token_value=azemjk.ttbyxkjulb5ed6ea
-sha_value=900e936a92f0614982ef9235600a05893e61d7e24ce3ef8c63186fa58801aa58
-
+#不用填写，不要动！
+tocken=
+sha_value=
 
 

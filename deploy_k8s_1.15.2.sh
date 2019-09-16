@@ -13,8 +13,9 @@ log="./setup.log"  #操作日志存放路径
 fsize=2000000
 exec 2>>$log  #如果执行过程中有错误信息均输出到日志文件中
 
-echo -e "\033[31m 这个是k8s集群脚本!欢迎关注我的个人公众号“devops的那些事”获得更多实用工具!Please continue to enter or ctrl+C to cancel \033[0m"
+echo -e "\033[31m 这个是Kubernetes集群一键部署脚本,当前部署版本为V1.15.2！Please continue to enter after 5S or ctrl+C to cancel \033[0m"
 sleep 5
+
 #yum update
 yum_update(){
 	yum update -y
@@ -244,8 +245,7 @@ init_k8s(){
 
 install_flannel(){
     cd $bash_path
-    test -f kube-flannel.yml || wget https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
-	kubectl apply -f kube-flannel.yml
+    kubectl apply -f kube-flannel.yml
     echo "flannel 网络配置完毕"
 }
 
@@ -253,11 +253,11 @@ token_shar_value(){
 
     cd $bash_path
     /usr/bin/kubeadm token list > $bash_path/token_shar_value.text
-    sed -i "s/tocken=/tocken=$(sed -n "2, 1p" token_shar_value.text | awk '{print $1}')/g" $bash_path/base.config
-    sed -i "s/sha_value=/sha_value=$(openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //')/g" $bash_path/base.config
+    sed -i "s/token_value=/token_value=$(sed -n "2, 1p" token_shar_value.text | awk '{print $1}')/g" $bash_path/k8s_config
+    sed -i "s/sha_value=/sha_value=$(openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //')/g" $bash_path/k8s_config
 
     rm -rf $bash_path/token_shar_value.text
-    echo "tocken 设置完毕"
+    echo "token_value 设置完毕"
 }
 
 
@@ -276,7 +276,7 @@ else
 echo '###########add'
 expect ssh_trust_add.exp $root_passwd $host
 fi
-scp base.config hwclock_ntp.sh node_install_k8s.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp /etc/hosts root@$host:/etc/hosts && ssh root@$host "hostnamectl set-hostname $hostname$num" && ssh root@$host /root/hwclock_ntp.sh && ssh root@$host /root/node_install_k8s.sh && ssh root@$host "rm -rf base.config node_install_k8s.sh ssh_trust_init.exp ssh_trust_add.exp hwclock_ntp.sh"
+scp -P 7030 k8s_config hwclock_ntp.sh node_install_k8s.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh root@$host "hostnamectl set-hostname $hostname$num" && ssh root@$host /root/hwclock_ntp.sh && ssh root@$host /root/node_install_k8s.sh && ssh root@$host "rm -rf k8s_config node_install_k8s.sh ssh_trust_init.exp ssh_trust_add.exp hwclock_ntp.sh"
 fi
 echo $host"服务器安装完毕!!! "
 done

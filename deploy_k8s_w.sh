@@ -226,7 +226,7 @@ join_cluster(){
 #设置K8S的系统环境
 set_k8s_env(){
 	mkdir -p /root/.kube
-	cp /etc/kubernetes/admin.conf /root/.kube/config
+	cp /www/kube-cluster/kubeadm/K8S-V1.15/admin.conf /root/.kube/config
 	chown $(id -u):$(id -g) /root/.kube/config
 	cp -p /root/.bash_profile /root/.bash_profile.bak$(date '+%Y%m%d%H%M%S')
 	echo "export KUBECONFIG=/root/.kube/config" >> /root/.bash_profile

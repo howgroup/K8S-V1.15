@@ -70,12 +70,18 @@ cd dashboard
 kubectl create -f .
 ```
 然后查看部署情况以及登录的node节点端口
-
+kubectl get service --all-namespaces
 kubectl get service --all-namespaces | grep kubernetes-dashboard
 例如结果：
 ```
-kube-system   kubernetes-dashboard   NodePort    10.101.25.47   <none>        443:31660/TCP   22m
-那么你就输入https://nodeIP:31660来登录
+kube-system   kubernetes-dashboard   NodePort    10.101.25.47   <none>        443:31000/TCP   22m
+那么你就输入https://nodeIP:31000来登录
+
+
+kubectl -n kubernetes-dashboard edit service kubernetes-dashboard
+kubectl edit service  kubernetes-dashboard-5c7687cf8-zk889 --namespace=kube-system
+kubectl logs kubernetes-dashboard-5c7687cf8-zk889 --namespace=kube-system
+
 ```
 查看登录时候的token
 ```
@@ -90,3 +96,11 @@ kubectl describe node calico-node-jq2dh -n kube-system
 kubectl describe node calico-node-hgrdj -n kube-system
 kubectl describe pod calico-node-hgrdj -n kube-system
 kubectl -n kube-system logs -f calico-node-hgrdj
+
+
+cat ~/.ssh/id_rsa.pub | ssh ，<目标服务器IP地址> "umask 077; mkdir -p .ssh ; cat >> .ssh/authorized_keys"
+curl -L https://raw.githubusercontent.com/beautifulcode/ssh-copy-id-for-OSX/master/install.sh | sh
+
+chmod 755 /usr/local/bin/ssh-copy-id
+
+yum -y install openssh-clients

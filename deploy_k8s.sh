@@ -27,7 +27,7 @@ yum_update(){
 yum_config(){
   yum install wget -y
   yum -y install epel-release
-  yum install -y tcl tclx tcl-devel expect
+  yum install -y tcl tclx tcl-devel expect openssh-clients
   yum -y install iotop iftop yum-utils net-tools git lrzsz expect gcc gcc-c++ make cmake libxml2-devel openssl-devel curl curl-devel unzip sudo libaio-devel wget vim ncurses-devel autoconf zlib-devel  python-devel bash-completion
   echo "----yum config OK!!"
 }

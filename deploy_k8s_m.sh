@@ -26,7 +26,7 @@ yum_update(){
 #configure yum source,配置yum的仓库路径，选择阿里云，将原有文件备份到bak目录下
 yum_config(){
   yum install wget epel-release -y
-  yum install -y tcl tclx tcl-devel expect
+  yum install -y tcl tclx tcl-devel expect openssh-clients
   if [[ $aliyun == "1" ]];then
   test -d /etc/yum.repos.d/bak/ || yum install wget epel-release -y && cd /etc/yum.repos.d/ && mkdir bak && mv -f *.repo bak/ && wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo && wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo && yum clean all && yum makecache
   fi

@@ -1,17 +1,19 @@
 # 1 更换 yum源为ali源，0 不更换yum源
 aliyun="1"
-
-masterip="10.26.1.201"
+#管理节点主节点
+masterip="10.26.1.17"
 # 过滤IP段
 ip_segment="10.26.1"
-# ntp 用
+# 集群网络段
 cluster_network="10.26.1.0/24"
 k8s_version="v1.15.2"
 root_passwd="Wioc_2017!"
+#管理节点备份节点
 hostname="wioc-master0"
 hostip=(
 10.26.1.17
 )
+#工作节点
 hostname_worker="wioc-worker0"
 hostip_worker=(
 10.26.1.10

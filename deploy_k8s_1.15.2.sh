@@ -26,7 +26,7 @@ yum_update(){
 #configure yum source,配置yum的仓库路径，选择阿里云，将原有文件备份到bak目录下
 yum_config(){
   yum install wget epel-release -y
-  yum install -y tcl tclx tcl-devel expect
+  yum install -y tcl tclx tcl-devel expect openssh-clients
 
   if [[ $aliyun == "1" ]];then
   test -d /etc/yum.repos.d/bak/ || yum install wget epel-release -y && cd /etc/yum.repos.d/ && mkdir bak && mv -f *.repo bak/ && wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo && wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo && yum clean all && yum makecache
@@ -135,7 +135,7 @@ echo "$ipaddr"
 }
 
 
-#根据配置文件,修改服务器名称,在同一个队列内的序号自动增加
+#根据配置文件,修改服务器名称,在同一个队列内的序号自动增加,设置管理节点
 change_hosts(){
 cd $bash_path
 num=0
@@ -144,7 +144,7 @@ do
 grep "$host" /etc/hosts
 if [[ $? -eq 0 ]];then
 
-echo "hosts修改完毕!!!"
+echo "管理节点hosts修改完毕!!!"
 else
 let num+=1
 
@@ -153,6 +153,31 @@ if [[ $host == `get_localip` ]];then
 grep "$host" /etc/hosts || echo $host `hostname` >> /etc/hosts
 else
 grep "$host" /etc/hosts || echo $host $hostname$num >> /etc/hosts
+fi
+
+fi
+done
+
+}
+
+#根据配置文件,修改服务器名称,在同一个队列内的序号自动增加,设置工作节点
+change_worker_hosts(){
+cd $bash_path
+num=0
+for host in ${hostip_worker[@]}
+do
+grep "$host" /etc/hosts
+if [[ $? -eq 0 ]];then
+
+echo "工作节点hosts修改完毕!!!"
+else
+let num+=1
+
+if [[ $host == `get_localip` ]];then
+`hostnamectl set-hostname $hostname_worker$num`
+grep "$host" /etc/hosts || echo $host `hostname` >> /etc/hosts
+else
+grep "$host" /etc/hosts || echo $host $hostname_worker$num >> /etc/hosts
 fi
 
 fi
@@ -355,6 +380,7 @@ main(){
   system_config
   ulimit_config
   change_hosts
+  change_worker_hosts
   swapoff
   install_docker
   #config_docker

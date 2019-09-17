@@ -26,7 +26,7 @@ yum_update(){
 #configure yum source,配置yum的仓库路径，选择阿里云，将原有文件备份到bak目录下
 yum_config(){
   yum install wget epel-release -y
-  yum install -y tcl tclx tcl-devel expect
+  yum install -y tcl tclx tcl-devel expect openssh-clients
 
   if [[ $aliyun == "1" ]];then
   test -d /etc/yum.repos.d/bak/ || yum install wget epel-release -y && cd /etc/yum.repos.d/ && mkdir bak && mv -f *.repo bak/ && wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo && wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo && yum clean all && yum makecache
@@ -159,6 +159,32 @@ fi
 done
 
 }
+
+#根据配置文件,修改服务器名称,在同一个队列内的序号自动增加,设置工作节点
+change_worker_hosts(){
+cd $bash_path
+num=0
+for host in ${hostip_worker[@]}
+do
+grep "$host" /etc/hosts
+if [[ $? -eq 0 ]];then
+
+echo "工作节点hosts修改完毕!!!"
+else
+let num+=1
+
+if [[ $host == `get_localip` ]];then
+`hostnamectl set-hostname $hostname_worker$num`
+grep "$host" /etc/hosts || echo $host `hostname` >> /etc/hosts
+else
+grep "$host" /etc/hosts || echo $host $hostname_worker$num >> /etc/hosts
+fi
+
+fi
+done
+
+}
+
 
 #install docker,安装当前指定的docker版本
 install_docker() {
@@ -303,7 +329,7 @@ if [[ `get_localip` != $host ]];then
     expect ssh_trust_add.exp $root_passwd $host
     fi
     echo "$host install k8s master please wait!!!!!!!!!!!!!!! "
-    scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_m.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/deploy_k8s_m.sh
+    scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_m.sh ssh-copy-id.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/ssh-copy-id.sh && ssh -p 7030 root@$host /root/deploy_k8s_m.sh
 
     echo "$host install k8s master success!!!!!!!!!!!!!!! "
 fi
@@ -329,7 +355,7 @@ echo '###########add'
 expect ssh_trust_add.exp $root_passwd $host
 fi
 echo "$host install k8s worker please wait!!!!!!!!!!!!!!! "
-scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_w.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname_worker$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/deploy_k8s_w.sh
+scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_w.sh ssh-copy-id.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname_worker$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/ssh-copy-id.sh && ssh -p 7030 root@$host /root/deploy_k8s_w.sh
 
 echo "$host install k8s worker success!!!!!!!!!!!!!!! "
 fi
@@ -355,6 +381,7 @@ main(){
   system_config
   ulimit_config
   change_hosts
+  change_worker_hosts
   swapoff
   install_docker
   #config_docker

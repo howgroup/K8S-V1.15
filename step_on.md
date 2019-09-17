@@ -5,6 +5,9 @@
 1、下载脚本工程
 ```
 yum -y install git
+
+创建目录
+mkdir /www/kube-cluster/kubeadm
 git clone https://github.com/howgroup/K8S-V1.15.git
 
 cd K8S-V1.15 && chmod -R 755 .
@@ -21,7 +24,9 @@ git reset --hard origin/master
 git pull
 chmod +x *.sh
 ```
-二、安装K8S
+
+
+二、分步安装K8S
 ---
 1、主节点安装
 ./deploy_k8s_1.15.2.sh
@@ -42,10 +47,6 @@ chmod +x *.sh
 
 3、工作节点安装
 ```
-创建目录
-mkdir /www/kube-cluster/kubeadm
-git clone https://github.com/howgroup/K8S-V1.15.git
-
 从主节点上，/www/kube-cluster/kubeadm/K8S-V1.15/k8s_config
 覆盖K8S-V1.15下的文件
 
@@ -60,6 +61,10 @@ chmod +x *.sh
 安装节点，以管理节点方式加入集群: ./deploy_k8s_w.sh
 
 ```
+
+三、一体化安装K8S
+---
+./deploy_k8s_1.15.2_all.sh
 
 三、安装控制台
 ---

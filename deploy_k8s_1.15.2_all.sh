@@ -368,7 +368,6 @@ echo "----rootssh worker config OK!!"
 check_cluster(){
 kubectl get node
 kubectl cluster-info
-kubectl cluster-info dump
 }
 
 

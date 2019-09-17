@@ -221,12 +221,14 @@ install_flannel(){
 #加入集群
 join_cluster(){
  kubeadm join $masterip:6443 --token $token_value --discovery-token-ca-cert-hash sha256:$sha_value
+ echo "worker join the k8s cluster"
+
 }
 
 #设置K8S的系统环境
 set_k8s_env(){
 	mkdir -p /root/.kube
-	cp /www/kube-cluster/kubeadm/K8S-V1.15/admin.conf /root/.kube/config
+	cp /root/admin.conf /root/.kube/config
 	chown $(id -u):$(id -g) /root/.kube/config
 	cp -p /root/.bash_profile /root/.bash_profile.bak$(date '+%Y%m%d%H%M%S')
 	echo "export KUBECONFIG=/root/.kube/config" >> /root/.bash_profile

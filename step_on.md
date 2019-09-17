@@ -57,7 +57,7 @@ chmod +x *.sh
 从主节点上，/www/kube-cluster/kubeadm/K8S-V1.15/k8s_config
 覆盖K8S-V1.15下的文件
 
-从主节点上，/etc/kubeletes下载admin.conf文件
+从主节点上，/etc/kubernetes下载admin.conf文件
 将文件下载到本机 /www/kube-cluster/kubeadm/K8S-V1.15/admin.conf
 
 设置脚本可执行
@@ -101,7 +101,10 @@ kubectl logs kubernetes-dashboard-5c7687cf8-zk889 --namespace=kube-system
 kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
 ```
 
-
+六、其他操作及操作
+---
+1、kubernetes的常用命令
+```
 kubectl get node --all-namespaces
 kubectl get pods -n kube-system -o wide
 kubectl get pods --all-namespaces
@@ -110,10 +113,11 @@ kubectl describe node calico-node-hgrdj -n kube-system
 kubectl describe pod calico-node-hgrdj -n kube-system
 kubectl -n kube-system logs -f calico-node-hgrdj
 
+```
 
-cat ~/.ssh/id_rsa.pub | ssh ，<目标服务器IP地址> "umask 077; mkdir -p .ssh ; cat >> .ssh/authorized_keys"
-curl -L https://raw.githubusercontent.com/beautifulcode/ssh-copy-id-for-OSX/master/install.sh | sh
-
-chmod 755 /usr/local/bin/ssh-copy-id
-
-yum -y install openssh-clients
+六、问题排查
+---
+1、启用rootssh后出现expect命令或ssh-copy-id无效
+原因：需要安装expect命令和ssh-copy-id
+操作：执行  yum install -y tcl tclx tcl-devel expect openssh-clients
+            运行 ./ssh-copy-id.sh

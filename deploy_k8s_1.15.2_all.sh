@@ -329,7 +329,7 @@ if [[ `get_localip` != $host ]];then
     expect ssh_trust_add.exp $root_passwd $host
     fi
     echo "$host install k8s master please wait!!!!!!!!!!!!!!! "
-    scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_m.sh ssh-copy-id.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/ssh-copy-id.sh && ssh -p 7030 root@$host /root/deploy_k8s_m.sh
+    scp -P 7030 /etc/kubernetes/admin.conf k8s_config setclock_ntp.sh deploy_k8s_m.sh ssh-copy-id.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/ssh-copy-id.sh && ssh -p 7030 root@$host /root/deploy_k8s_m.sh
 
     echo "$host install k8s master success!!!!!!!!!!!!!!! "
 fi
@@ -355,7 +355,7 @@ echo '###########add'
 expect ssh_trust_add.exp $root_passwd $host
 fi
 echo "$host install k8s worker please wait!!!!!!!!!!!!!!! "
-scp -P 7030 k8s_config setclock_ntp.sh deploy_k8s_w.sh ssh-copy-id.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname_worker$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/ssh-copy-id.sh && ssh -p 7030 root@$host /root/deploy_k8s_w.sh
+scp -P 7030 /etc/kubernetes/admin.conf k8s_config setclock_ntp.sh deploy_k8s_w.sh ssh-copy-id.sh ssh_trust_init.exp ssh_trust_add.exp root@$host:/root && scp -P 7030 /etc/hosts root@$host:/etc/hosts && ssh -p 7030 root@$host "hostnamectl set-hostname $hostname_worker$num" && ssh -p 7030 root@$host /root/setclock_ntp.sh && ssh -p 7030 root@$host /root/ssh-copy-id.sh && ssh -p 7030 root@$host /root/deploy_k8s_w.sh
 
 echo "$host install k8s worker success!!!!!!!!!!!!!!! "
 fi

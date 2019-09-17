@@ -83,15 +83,13 @@ cd dashboard
 kubectl create -f .
 ```
 然后查看部署情况以及登录的node节点端口
-kubectl get service --all-namespaces
 kubectl get service --all-namespaces | grep kubernetes-dashboard
 例如结果：
 ```
 kube-system   kubernetes-dashboard   NodePort    10.101.25.47   <none>        443:31000/TCP   22m
 那么你就输入https://nodeIP:31000来登录
 
-
-kubectl -n kubernetes-dashboard edit service kubernetes-dashboard
+kubectl get service --all-namespaces
 kubectl edit service  kubernetes-dashboard-5c7687cf8-zk889 --namespace=kube-system
 kubectl logs kubernetes-dashboard-5c7687cf8-zk889 --namespace=kube-system
 
